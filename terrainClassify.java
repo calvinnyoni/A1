@@ -25,13 +25,13 @@ public class terrainClassify {
         float[][] matrix = new float[size][size];
 
         //Populate the matrix
-        int i = size - 1;
+        int i = 0;
 
         while (scanner.hasNextLine()) {
             
             String currentLine = scanner.nextLine();
 
-            System.out.println(currentLine);
+            //System.out.println(currentLine);
 
             String[] ithRow = currentLine.split(" ");
             
@@ -43,7 +43,7 @@ public class terrainClassify {
                 j = j + 1;
             }
 
-            i = i - 1;
+            i = i + 1;
         }
 
         scanner.close();
@@ -62,7 +62,7 @@ public class terrainClassify {
             int iNeighbour = indices[0];
             int jNeighbour = indices[1];
 
-            if (matrix[i][j] - matrix[iNeighbour][jNeighbour] <= 0.01) {
+            if ((matrix[iNeighbour][jNeighbour] - matrix[i][j]) <= - 0.01) {
                 return false;
             }
         }
@@ -72,6 +72,33 @@ public class terrainClassify {
     
     public static void classify(float[][] matrix) {
         
+        int size = matrix.length;
+
+        int i = 1;
+        int j = 1;
+
+        ArrayList<String> basins = new ArrayList<String>();
+
+        //loop over each row 
+        while (i < size - 1) {
+            System.out.println("Checking row " + i);
+            //loop over each column
+            while (j < size - 1) {
+                System.out.println("Checking position (" + i + "," + j + ")");
+                if (checkBasin(i, j, matrix) == true) {
+                    basins.add(i + " " + j);
+                }
+                j = j + 1;
+            }
+            j = 1;
+            i = i + 1;
+        }
+
+        System.out.println(basins.size());
+
+        for (String basin: basins) {
+            System.out.println(basin);
+        }
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -82,13 +109,15 @@ public class terrainClassify {
 
         float[][] matrix = getData(fileName);
 
-        for (float[] ithRow : matrix) {
-            for (float jthValue : ithRow) {
-                System.out.print(jthValue);
-            }
-            System.out.println();
-        }
+        // for (float[] ithRow : matrix) {
+        //     for (float jthValue : ithRow) {
+        //         System.out.print(jthValue);
+        //     }
+        //     System.out.println();
+        // }
 
         scanner.close();
+
+        classify(matrix);
     }
 }
