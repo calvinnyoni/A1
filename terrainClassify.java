@@ -1,14 +1,52 @@
-/**
- * Terrain classification programme
- * @since 8 August 2020
- * @author Calvin Nyoni
- */
+//We fix this!
 
- import java.io.*;
- import java.util.*;
+import java.util.*;
+import java.io.*;
 
 public class terrainClassify {
-    public static float[][] getData(String fileName) throws FileNotFoundException {
+
+    //given an nxn matrix, and an index i this method determine if it is an edge element or not
+    public static boolean isEdge(int i, int n) {
+        if (i < n) {
+            return true;
+        }
+        else if (i > n*(n-1)) {
+            return true;
+        }
+        else if ((i % n) == 0) {
+            return true;
+        }
+        else if (((i+1) % n) == 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    //
+    public static boolean isBasin(int i, float[] matrix) {
+        //System.out.println("Checking index " + i + "...");
+
+        int n = (int) Math.sqrt(matrix.length);
+
+        int[] neighbours = { i-n-1, i-n, i-n+1, i-1, i+1, i+n-1, i+n, i+n+1};
+
+        int k = 0;
+
+        while (k < neighbours.length) {
+            //System.out.println("Checking neighbour " + neighbours[k]);
+            if (matrix[neighbours[k]] <= (matrix[i] + 0.01)) {
+                return false;
+            }
+            k = k + 1;
+        }
+        
+        return true;
+    }
+    
+    
+    public static float[] getData(String fileName) throws FileNotFoundException {
 
         //Open file
         File file = new File(fileName);
@@ -16,33 +54,23 @@ public class terrainClassify {
         Scanner scanner = new Scanner(file);
 
         //Instatiate matrix by given size
-        String firstLine = scanner.nextLine();
+        String lineFromFile = scanner.nextLine();
 
-        String[] firstLineArray = firstLine.split(" ");
+        String[] data = lineFromFile.split(" ");
 
-        int size = Integer.parseInt(firstLineArray[0]);
+        int n = Integer.parseInt(data[0]);
 
-        float[][] matrix = new float[size][size];
+        float[] matrix = new float[n*n];
 
         //Populate the matrix
         int i = 0;
 
-        while (scanner.hasNextLine()) {
-            
-            String currentLine = scanner.nextLine();
+        lineFromFile = scanner.nextLine();
 
-            //System.out.println(currentLine);
+        data = lineFromFile.split(" ");
 
-            String[] ithRow = currentLine.split(" ");
-            
-            int j = 0;
-
-            for (String value : ithRow) {
-                float jthValue = Float.parseFloat(value);
-                matrix[i][j] = jthValue;
-                j = j + 1;
-            }
-
+        while (i < n*n) {
+            matrix[i] = Float.parseFloat(data[i]);
             i = i + 1;
         }
 
@@ -52,72 +80,47 @@ public class terrainClassify {
 
     }
 
-    public static boolean checkBasin(int i, int j, float[][] matrix) {
+    public static void main(String[] args) throws IOException {
+        Scanner scanner = new Scanner(System.in);
 
-        int[][] neigbourIndices = { {i-1, j-1}, {i-1, j}, {i-1, j+1}, //row below indices
-                                    {i,j-1}, {i,j+1}, //same row indices
-                                    {i+1, j-1}, {i+1, j}, {i+1, j+1} }; //row above indices
+        //System.out.println("Enter file name: ");
+        String fileName = scanner.nextLine();
 
-        for (int[] indices : neigbourIndices) {
-            int iNeighbour = indices[0];
-            int jNeighbour = indices[1];
+        float[] matrix = getData(fileName);
 
-            if ((matrix[iNeighbour][jNeighbour] - matrix[i][j]) <= - 0.01) {
-                return false;
+        int n = (int) Math.sqrt(matrix.length);
+
+        int i = 0;
+
+        int numOfBasins = 0;
+
+        String basins = "";
+
+        int basinRow = 0;
+        int basinColumn = 0;
+
+        while (i < (n*n)) {
+
+            if (isEdge(i, n)) {
+                //System.out.println("Index " + i + " is an edge.");
+                i = i + 1;
+                continue;
             }
-        }
 
-        return true;
-    }
-    
-    public static void classify(float[][] matrix) {
-        
-        int size = matrix.length;
-
-        int i = 1;
-        int j = 1;
-
-        ArrayList<String> basins = new ArrayList<String>();
-
-        //loop over each row 
-        while (i < size - 1) {
-            System.out.println("Checking row " + i);
-            //loop over each column
-            while (j < size - 1) {
-                System.out.println("Checking position (" + i + "," + j + ")");
-                if (checkBasin(i, j, matrix) == true) {
-                    basins.add(i + " " + j);
+            else {
+                if (isBasin(i, matrix)) {
+                    numOfBasins = numOfBasins + 1;
+                    basinRow = (int) i/n;
+                    basinColumn = i % n;
+                    basins = basins + basinRow + " " + basinColumn + "\n";
                 }
-                j = j + 1;
             }
-            j = 1;
+
             i = i + 1;
         }
 
-        System.out.println(basins.size());
-
-        for (String basin: basins) {
-            System.out.println(basin);
-        }
-    }
-
-    public static void main(String[] args) throws FileNotFoundException {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Enter file name: ");
-        String fileName = scanner.nextLine();
-
-        float[][] matrix = getData(fileName);
-
-        // for (float[] ithRow : matrix) {
-        //     for (float jthValue : ithRow) {
-        //         System.out.print(jthValue);
-        //     }
-        //     System.out.println();
-        // }
-
         scanner.close();
 
-        classify(matrix);
+        System.out.println(numOfBasins + "\n" + basins);
     }
 }
